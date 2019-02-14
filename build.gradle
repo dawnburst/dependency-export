@@ -46,8 +46,10 @@ task printDep {
                 }
         }
 
+        println "dependencies {"
         emptyList.each {
-            println "compile(\"$it\")"
+            println "\tcompile(\"$it\")"
         }
+        println "}"
     }
 }
