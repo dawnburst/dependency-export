@@ -34,20 +34,19 @@ dependencies {
 task printDep {
     doLast {
 
-        Set emptyList = []
+        Set dependencyList = []
 
         configurations
                 .findAll { it.canBeResolved }
                 .each {
             con ->
                 con.resolvedConfiguration.resolvedArtifacts.each {
-                    artifact -> emptyList.add(artifact.moduleVersion.id)
-                        //println "compile(" + artifact.moduleVersion.id + ")"
+                    artifact -> dependencyList.add(artifact.moduleVersion.id)
                 }
         }
 
         println "dependencies {"
-        emptyList.each {
+        dependencyList.each {
             println "\tcompile(\"$it\")"
         }
         println "}"
