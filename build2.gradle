@@ -1,0 +1,118 @@
+
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:2.0.5.RELEASE")
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+
+import groovy.json.*
+
+bootJar {
+    baseName = 'gs-spring-boot'
+    version =  '0.1.0'
+}
+
+repositories {
+    mavenCentral()
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+dependencies {
+    compile("org.springframework.boot:spring-boot-starter-web")
+    testCompile("junit:junit")
+}
+
+task printDepsTreeInJson {
+    doLast {
+        configurations.compile.incoming.getResolutionResult().getAllDependencies().each { depResult  ->
+            println "{\"from\":\"" + depResult.getFrom() + "\"," + "\"requested\":\"" + depResult.getRequested() + "\"}"
+        }
+    }
+}
+
+task printSolvedDepsTreeInJson {
+    doLast {
+        def jsonOutput = "["
+        configurations.compile.resolvedConfiguration.firstLevelModuleDependencies.each { dep ->
+            def addToJson
+            addToJson = { resolvedDep ->
+                jsonOutput += "\n{"
+                jsonOutput += "\"groupId\":\"${resolvedDep.module.id.group}\",\"artifactId\":\"${resolvedDep.module.id.name}\",\"version\":\"${resolvedDep.module.id.version}\",\"file\":\"${resolvedDep.getModuleArtifacts()[0].file}\""
+                jsonOutput += ",\"dependencies\":["
+                if(resolvedDep.children.size()!=0){
+                    resolvedDep.children.each { childResolvedDep ->
+                        if(resolvedDep in childResolvedDep.getParents() && childResolvedDep.getConfiguration() == 'compile'){
+                            addToJson(childResolvedDep)
+                        }
+                    }
+                    if(jsonOutput[-1] == ','){
+                        jsonOutput = jsonOutput[0..-2]
+                    }
+                }
+                jsonOutput += "]},"
+            }
+            addToJson(dep)
+        }
+        if(jsonOutput[-1] == ','){
+            jsonOutput = jsonOutput[0..-2]
+        }
+        jsonOutput += "]"
+        println jsonOutput
+    }
+}
+
+task printDependencies {
+    doLast {
+        def json = '"dependencies": ['
+
+        configurations.runtime.resolvedConfiguration.resolvedArtifacts.each { artifact ->
+            def id = artifact.moduleVersion.id
+            // println "group: ${id.group}, name: ${id.name}, version: ${id.version}"
+            json += JsonOutput.toJson(id)
+        }
+
+        json += "]"
+        json = JsonOutput.prettyPrint(json)
+        println json
+    }
+}
+
+task printDep {
+    doLast {
+
+//        println 'runtime dependencies'
+//        configurations.runtime.resolvedConfiguration.resolvedArtifacts.each {
+//            artifact -> println artifact.moduleVersion.id
+//        }
+//
+//        println 'compile dependencies'
+//        configurations.compile.resolvedConfiguration.resolvedArtifacts.each {
+//            artifact -> println artifact.moduleVersion.id
+//        }
+//        println 'testCompile dependencies'
+//        configurations.testCompile.resolvedConfiguration.resolvedArtifacts.each {
+//            artifact -> println artifact.moduleVersion.id
+//        }
+
+        println 'testCompile dependencies'
+        configurations.testCompile.resolvedConfiguration.resolvedArtifacts.each {
+            artifact -> println artifact.moduleVersion.properties
+        }
+
+//        println dependencies.metaPropertyValues
+
+
+    }
+}
