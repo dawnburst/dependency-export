@@ -1,0 +1,53 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'org.owasp:dependency-check-gradle:4.0.1'
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:2.1.2.RELEASE")
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'org.owasp.dependencycheck'
+
+
+repositories {
+    mavenCentral()
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+dependencies {
+    compile("org.springframework.boot:spring-boot-starter-web")
+    testCompile("junit:junit")
+    compile("org.springframework.boot:spring-boot-starter-data-mongodb")
+    testCompile("org.springframework.boot:spring-boot-starter-test")
+}
+
+
+task printDep {
+    doLast {
+
+        Set emptyList = []
+
+        configurations
+                .findAll { it.canBeResolved }
+                .each {
+            con ->
+                con.resolvedConfiguration.resolvedArtifacts.each {
+                    artifact -> emptyList.add(artifact.moduleVersion.id)
+                        //println "compile(" + artifact.moduleVersion.id + ")"
+                }
+        }
+
+        emptyList.each {
+            println "compile(\"$it\")"
+        }
+    }
+}
