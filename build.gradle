@@ -1,3 +1,6 @@
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
 buildscript {
     repositories {
         mavenCentral()
@@ -11,9 +14,6 @@ buildscript {
 apply plugin: 'java'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
-//apply plugin: 'org.owasp.dependencycheck'
-//apply plugin: 'eclipse'
-//apply plugin: 'idea'
 
 repositories {
     mavenCentral()
@@ -37,30 +37,53 @@ task saveProjectDependencies {
             .each {
         con ->
             con.resolvedConfiguration.resolvedArtifacts.each {
-//                    artifact -> dependencyList.add(artifact.moduleVersion.id)
-//                    println it.file.getName() // << the file reference
-                depenenciesFiles += (it.getModuleVersion().toString() + "~" + it.file.getName().toString() + "\n");
                 dependencyList.add(it.getModuleVersion().toString() + "~" + it.file.getName().toString());
-//                println(it.getModuleVersion().toString() + "~" + it.file.getName());
             }
 
     }
-//    println depenenciesFiles;
-//    println(dependencyList.toString())
+
     dependencyList.each {
-//        println it;
-//        depenenciesFiles += it.toString() + "\n";
+        depenenciesFiles += it.toString() + "\n";
     }
 
     println depenenciesFiles;
 
-    def outputFile = new File("dependencies_list2.txt")
-    def w = outputFile.newWriter()
-    w.write("123123");
-//    w << depenenciesFiles
-//    w << dependencyList.each {
-//        println it;
-//        depenenciesFiles += it + "\n";
-//        it.toString() + "\n"
-//    }
+//    DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
+//    String timeStamp = LocalDateTime.now().format(dateTimeFormatter)
+//
+//    String fileName = "dependencies_" + timeStamp + ".txt";
+    String fileName = "dependencies.txt";
+    File file = new File(fileName)
+    file.write depenenciesFiles
+}
+
+task compareDependencies{
+//    String file = new File("dependencies_20190306_162153.txt").getText()
+//    print file
+
+    Set dependencyList = [];
+
+    configurations
+            .findAll { it.canBeResolved }
+            .each {
+        con ->
+            con.resolvedConfiguration.resolvedArtifacts.each {
+                dependencyList.add(it.getModuleVersion().toString() + "~" + it.file.getName().toString());
+            }
+    }
+
+    new File("dependencies.txt").eachLine{
+        line -> dependencyList.remove(line)
+    }
+
+    if (dependencyList.size() > 0) {
+        println "Unable to find the following dependencies:"
+        dependencyList.each {
+            print it.toString() + "\n";
+        }
+    }
+    else {
+        println "All dependencies was found"
+    }
+
 }
