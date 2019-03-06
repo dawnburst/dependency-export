@@ -4,51 +4,63 @@ buildscript {
     }
     dependencies {
         classpath 'org.owasp:dependency-check-gradle:4.0.1'
-        classpath("org.springframework.boot:spring-boot-gradle-plugin:2.1.2.RELEASE")
+        classpath 'org.springframework.boot:spring-boot-gradle-plugin:2.1.2.RELEASE'
     }
 }
 
 apply plugin: 'java'
-apply plugin: 'eclipse'
-apply plugin: 'idea'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
-apply plugin: 'org.owasp.dependencycheck'
-
+//apply plugin: 'org.owasp.dependencycheck'
+//apply plugin: 'eclipse'
+//apply plugin: 'idea'
 
 repositories {
     mavenCentral()
 }
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
-
 dependencies {
-    compile("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-web")
     testCompile("junit:junit")
-    compile("org.springframework.boot:spring-boot-starter-data-mongodb")
+    implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
     testCompile("org.springframework.boot:spring-boot-starter-test")
 }
 
 
-task printDep {
-    doLast {
+task saveProjectDependencies {
 
-        Set dependencyList = []
+    String depenenciesFiles = "";
+    Set dependencyList = [];
 
-        configurations
-                .findAll { it.canBeResolved }
-                .each {
-            con ->
-                con.resolvedConfiguration.resolvedArtifacts.each {
-                    artifact -> dependencyList.add(artifact.moduleVersion.id)
-                }
-        }
+    configurations
+            .findAll { it.canBeResolved }
+            .each {
+        con ->
+            con.resolvedConfiguration.resolvedArtifacts.each {
+//                    artifact -> dependencyList.add(artifact.moduleVersion.id)
+//                    println it.file.getName() // << the file reference
+                depenenciesFiles += (it.getModuleVersion().toString() + "~" + it.file.getName().toString() + "\n");
+                dependencyList.add(it.getModuleVersion().toString() + "~" + it.file.getName().toString());
+//                println(it.getModuleVersion().toString() + "~" + it.file.getName());
+            }
 
-        println "dependencies {"
-        dependencyList.each {
-            println "\tcompile(\"$it\")"
-        }
-        println "}"
     }
+//    println depenenciesFiles;
+//    println(dependencyList.toString())
+    dependencyList.each {
+//        println it;
+//        depenenciesFiles += it.toString() + "\n";
+    }
+
+    println depenenciesFiles;
+
+    def outputFile = new File("dependencies_list2.txt")
+    def w = outputFile.newWriter()
+    w.write("123123");
+//    w << depenenciesFiles
+//    w << dependencyList.each {
+//        println it;
+//        depenenciesFiles += it + "\n";
+//        it.toString() + "\n"
+//    }
 }
