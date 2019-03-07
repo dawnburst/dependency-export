@@ -26,64 +26,64 @@ dependencies {
     testCompile("org.springframework.boot:spring-boot-starter-test")
 }
 
-
 task saveProjectDependencies {
 
-    String depenenciesFiles = "";
-    Set dependencyList = [];
+    doLast{
+        String depenenciesFiles = "";
+        Set dependencyList = [];
+    
+        configurations
+                .findAll { it.canBeResolved }
+                .each {
+            con ->
+                con.resolvedConfiguration.resolvedArtifacts.each {
+                    dependencyList.add(it.getModuleVersion().toString() + "~" + it.file.getName().toString());
+                }
+    
+        }
+    
+        dependencyList.each {
+            depenenciesFiles += it.toString() + "\n";
+        }
+    
+        println depenenciesFiles;
+    
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
+        String timeStamp = LocalDateTime.now().format(dateTimeFormatter)
 
-    configurations
-            .findAll { it.canBeResolved }
-            .each {
-        con ->
-            con.resolvedConfiguration.resolvedArtifacts.each {
-                dependencyList.add(it.getModuleVersion().toString() + "~" + it.file.getName().toString());
-            }
-
+        String fileName = "dependencies_" + timeStamp + ".txt";
+//        String fileName = "dependencies.txt";
+        File file = new File(fileName)
+        file.write depenenciesFiles
     }
-
-    dependencyList.each {
-        depenenciesFiles += it.toString() + "\n";
-    }
-
-    println depenenciesFiles;
-
-//    DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
-//    String timeStamp = LocalDateTime.now().format(dateTimeFormatter)
-//
-//    String fileName = "dependencies_" + timeStamp + ".txt";
-    String fileName = "dependencies.txt";
-    File file = new File(fileName)
-    file.write depenenciesFiles
 }
 
 task compareDependencies{
-//    String file = new File("dependencies_20190306_162153.txt").getText()
-//    print file
 
-    Set dependencyList = [];
+    doLast {
+        Set internetDependencyList = [];
+        Set bankDependencyList = [];
 
-    configurations
-            .findAll { it.canBeResolved }
-            .each {
-        con ->
-            con.resolvedConfiguration.resolvedArtifacts.each {
-                dependencyList.add(it.getModuleVersion().toString() + "~" + it.file.getName().toString());
+        new File("dependencies_20190307_103753.txt").eachLine {
+            line -> internetDependencyList.add(line)
+        }
+
+        configurations
+                .findAll { it.canBeResolved }
+                .each {
+            con ->
+                con.resolvedConfiguration.resolvedArtifacts.each {
+                    bankDependencyList.add(it.getModuleVersion().toString() + "~" + it.file.getName().toString());
+                }
+        }
+
+        if (bankDependencyList.size() > 0) {
+            println "Unable to find the following dependencies:"
+            (internetDependencyList - bankDependencyList).each {
+                println it
             }
-    }
-
-    new File("dependencies.txt").eachLine{
-        line -> dependencyList.remove(line)
-    }
-
-    if (dependencyList.size() > 0) {
-        println "Unable to find the following dependencies:"
-        dependencyList.each {
-            print it.toString() + "\n";
+        } else {
+            println "All dependencies was found"
         }
     }
-    else {
-        println "All dependencies was found"
-    }
-
 }
